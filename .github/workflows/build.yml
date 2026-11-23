@@ -43,11 +43,15 @@ jobs:
           fi
           c1541 build/solidcraft.d64 -list
       - name: Smoke test in VICE
-        run: python3 tools/ci/smoke.py build/solidcraft.d64 build/shots
+        # On a copy: the test saves a part and an STL onto the disk it uses.
+        run: |
+          cp build/solidcraft.d64 build/smoke.d64
+          python3 tools/ci/smoke.py build/smoke.d64 build/shots
       - name: Package
         run: |
           mkdir -p dist
-          cp build/*.prg build/solidcraft.d64 dist/
+          cp build/boot.prg build/solidcraft.prg build/solidcraft.d64 dist/
+          python3 -c "import sys; sys.path.insert(0, 'tools'); import mkd64; names = [n for n, t, b in mkd64.read_d64(open('dist/solidcraft.d64', 'rb').read())[1]]; print(names); assert 'PLATE.SC64' not in names"
           cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         if: always()
