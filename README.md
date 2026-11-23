@@ -23,16 +23,15 @@ replacement for SolidCraft. It is the third member of the family, after
 [SolidCraft 2000](https://github.com/raykholo/solidcraft2000), and the only
 one with a cassette port it doesn't use.
 
-## Status
+![SolidCraft 64: loading, the splash, a sketch, an extrude, the wireframe, and a part from SolidCraft 98](docs/demo.gif)
 
-Under construction. The parts below arrive in this order:
+## Getting it
 
-1. The wireframe: sketch, extrude, rotate with the cursor keys or a joystick in port 2.
-2. Files: `.SC64` parts on the disk, ASCII STL export, and a converter on your PC
-   that brings SolidCraft 98 and SolidCraft 2000 parts over.
-3. The splash, the menus, the feature list, and loading at the speed of a real
-   1541 (about 400 bytes a second), border flashing. A fast loader cartridge is
-   available, as it was.
+`solidcraft.d64` is the disk. Put it in [VICE](https://vice-emu.sourceforge.io)
+(`x64sc solidcraft.d64`), or on an SD2IEC, or write it to a real floppy if you
+still have a drive that works and the patience to wait for it. Then
+`LOAD"SOLIDCRAFT",8,1` and `RUN`. It takes about a minute to load. That's the
+point. `SHA256SUMS.txt` has the sums.
 
 ## The wireframe
 
@@ -134,15 +133,23 @@ list and the screen says `?OUT OF MEMORY  ERROR`. It isn't one.
 You need [cc65](https://cc65.github.io). Then:
 
 ```
-make          # build/solidcraft.prg
-make d64      # build/solidcraft.d64, with the samples
+make          # build/boot.prg (SOLIDCRAFT) and build/solidcraft.prg (SC64.BIN)
+make d64      # build/solidcraft.d64: both, and the samples
+make test     # the converter's and mkd64's unit tests
 ```
 
 To run it, open the `.d64` in [VICE](https://vice-emu.sourceforge.io) (`x64sc`)
 or on a real Commodore 64 with a 1541 or an SD2IEC.
 
+CI builds it with cc65, then drives it in VICE through the binary monitor
+(`tools/ci/smoke.py`): it loads off the disk with true drive emulation, sketches,
+extrudes, cuts, turns the wireframe, saves, exports an STL and opens a converted
+part, then reads the disk back and checks what the C64 wrote. The animation at
+the top is that test's screenshots.
+
 cc65 and VICE are tools only; neither is part of this project. No Commodore ROM
-is in this repository or its releases. See [NOTICE](NOTICE).
+is in this repository or its releases: CI takes the ROMs from VICE's own source
+release while the test runs. See [NOTICE](NOTICE).
 
 ## Files on the disk
 
@@ -211,9 +218,15 @@ Flange, made from a bolt-circle pattern; the originals are in `samples/in/`.
 
 | | |
 |---|---|
+| `src/main.c` | the splash, the menus, the dialogs, the feature list |
+| `src/view.c`, `src/line.s`, `src/clip.c` | the wireframe: 3D in C, lines in 6502 |
+| `src/files.c` | `.SC64` parts, STL and the directory, on drive 8 |
+| `src/boot/` | `SOLIDCRAFT`, the boot loader, and the cartridge question |
 | `src/model.h` | the part in memory, shared by everything |
 | `src/sc64.cfg` | the linker's memory map ([docs/MEMORY.md](docs/MEMORY.md)) |
 | `docs/FORMAT.md` | the `.SC64` part file |
-| `tools/ci/` | the CI scripts and a local test image |
+| `tools/mkd64.py` | builds the `.d64` (and reads one back) |
+| `tools/convert.py` | SolidCraft 98 and 2000 parts to `.SC64` |
+| `tools/ci/` | the CI scripts, the VICE driver and a local test image |
 
 MIT License. See [LICENSE](LICENSE).
