@@ -34,6 +34,37 @@ Under construction. The parts below arrive in this order:
    1541 (about 400 bytes a second), border flashing. A fast loader cartridge is
    available, as it was.
 
+## The wireframe
+
+Hi-res bitmap mode, 320 x 200, light blue on blue, because that is what the
+machine does when you switch it on and nobody has ever improved on it. One
+foreground colour and one background colour for the whole screen. The hi-res
+colour matrix is a rounding error you only have to fill once.
+
+![A plate, a boss and three holes](docs/screenshots/wire-1.png)
+
+- **Lines** are Bresenham in 6502 assembly (`src/line.s`), all eight octants,
+  with the KERNAL banked out while they run so the bitmap can be read and ORed.
+  The pointer into the bitmap is stepped, not recomputed. `src/clip.c` clips to
+  the screen first, which almost never matters, because the part is fitted to a
+  sphere of 92 pixels. `make viewdemo` builds a harness; its `T` key checks 64
+  lines (edges, diagonals, random) pixel for pixel against a second
+  implementation. All 64 agree.
+- **3D** is orthographic, in eighths of a pixel, with a 256-step sine table
+  (`tools/gensin.py` made it) and two hand-written multiplies, because cc65's
+  `long` multiply costs a few thousand cycles and these cost about 500 and 1,100. Yaw and
+  pitch; the cursor keys turn the part in steps of 1/64 of a turn.
+- **Geometry**: rectangles, circles as 24-gons, extrudes (both loops and the
+  verticals), cuts (the same, drawn down from the top face). Circles get four
+  verticals, at their left and right silhouette and the two between. A sketch
+  with nothing made from it is drawn flat. The origin triad is bottom left.
+- **Speed**: a redraw of a 10-feature part (plate, boss, three holes: 4 circles,
+  1 rectangle, 220 lines) takes about 880,000 cycles, which is 0.89 s on a PAL
+  machine at 985,248 Hz. The viewdemo prints the number after every redraw, from
+  the CIA timers. Warp mode does not change it.
+
+Other angles: [2](docs/screenshots/wire-2.png), [3](docs/screenshots/wire-3.png).
+
 ## Building
 
 You need [cc65](https://cc65.github.io). Then:

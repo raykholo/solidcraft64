@@ -18,3 +18,12 @@ clean:
 	rm -rf $(OUT) src/*.o
 
 .PHONY: all d64 clean
+
+# Lane A's test harness: the wireframe on its own (tests/viewdemo.c).
+viewdemo: $(OUT)/viewdemo.prg
+$(OUT)/viewdemo.prg: tests/viewdemo.c src/view.c src/line.s src/clip.c src/model.c src/model.h src/line.h src/sc64.cfg
+	mkdir -p $(OUT)
+	$(CL65) -t c64 -O -C src/sc64.cfg -m $(OUT)/viewdemo.map -o $@ tests/viewdemo.c src/view.c src/line.s src/clip.c src/model.c
+	@ls -l $@
+
+.PHONY: viewdemo
