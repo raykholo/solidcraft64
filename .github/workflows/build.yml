@@ -8,18 +8,69 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+permissions:
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Install cc65
+      - name: Install cc65 and VICE
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq cc65
+          sudo apt-get install -y -qq --no-install-recommends cc65 vice xvfb
+      - name: Cache the VICE source release (for its ROMs)
+        uses: actions/cache@v4
+        with:
+          path: ~/vice-tgz
+          key: vice-3.7.1-7e3811e6
+      - name: ROMs for the emulator (test time only, never committed or released)
+        run: |
+          mkdir -p ~/vice-tgz
+          test -f ~/vice-tgz/vice-3.7.1.tar.gz || curl -fsSL --retry 3 -o ~/vice-tgz/vice-3.7.1.tar.gz \
+            https://downloads.sourceforge.net/project/vice-emu/releases/vice-3.7.1.tar.gz
+          sudo VICE_TGZ=$HOME/vice-tgz/vice-3.7.1.tar.gz tools/ci/fetch-roms.sh /usr/share/vice
       - name: Build
         run: make
+      - name: Disk image
+        run: |
+          if [ -f tools/mkd64.py ]; then
+            make d64
+          else
+            c1541 -format "solidcraft 64,sc" d64 build/solidcraft.d64 -write build/solidcraft.prg solidcraft
+          fi
+          c1541 build/solidcraft.d64 -list
+      - name: Smoke test in VICE
+        run: python3 tools/ci/smoke.py build/solidcraft.d64 build/shots
+      - name: Package
+        run: |
+          mkdir -p dist
+          cp build/*.prg build/solidcraft.d64 dist/
+          cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: build/shots
       - uses: actions/upload-artifact@v4
         with:
           name: solidcraft64
-          path: build/solidcraft.prg
+          path: dist
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: solidcraft64
+          path: dist
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist && sha256sum -c SHA256SUMS.txt
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft \
+            --title "SolidCraft 64 ${GITHUB_REF_NAME#v}" --notes "Release notes to follow." *
