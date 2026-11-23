@@ -32,6 +32,8 @@ jobs:
           sudo VICE_TGZ=$HOME/vice-tgz/vice-3.7.1.tar.gz tools/ci/fetch-roms.sh /usr/share/vice
       - name: Build
         run: make
+      - name: Tool tests
+        run: python3 -m unittest discover -s tests
       - name: Disk image
         run: |
           if [ -f tools/mkd64.py ]; then
