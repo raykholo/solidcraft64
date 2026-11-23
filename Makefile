@@ -14,10 +14,24 @@ $(OUT)/solidcraft.prg: $(SRC) src/model.h src/sc64.cfg
 d64: $(OUT)/solidcraft.prg
 	python3 tools/mkd64.py $(OUT)/solidcraft.d64 $(OUT)/solidcraft.prg samples/*.SC64
 
+# The files test harness (tests/filesdemo.c): its own program on its own disk,
+# with the samples and some bad parts. Run it in VICE: tests/run-filesdemo.sh
+filesdemo: $(OUT)/filesdemo.d64
+
+$(OUT)/filesdemo.prg: tests/filesdemo.c src/files.c src/model.c src/model.h
+	mkdir -p $(OUT)
+	$(CL65) -t c64 -O -o $@ tests/filesdemo.c src/files.c src/model.c
+
+$(OUT)/filesdemo.d64: $(OUT)/filesdemo.prg tests/mkdemodisk.py tools/mkd64.py samples/*.SC64
+	python3 tests/mkdemodisk.py $@ $(OUT)/filesdemo.prg samples/*.SC64
+
+test:
+	python3 -m unittest discover -s tests -v
+
 clean:
 	rm -rf $(OUT) src/*.o
 
-.PHONY: all d64 clean
+.PHONY: all d64 filesdemo test clean
 
 # Lane A's test harness: the wireframe on its own (tests/viewdemo.c).
 viewdemo: $(OUT)/viewdemo.prg

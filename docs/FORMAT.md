@@ -29,6 +29,21 @@ END
 
 At most 16 features. The feature types match `F_*` in `src/model.h`.
 
+## File names
+
+A Commodore file name is 16 characters, so the disk name is the part's name
+with everything but A-Z, 0-9, space and hyphen removed, cut at the first `.`
+and to its first 11 characters, trailing spaces dropped, then `.SC64`. (An STL
+gets 12 and `.STL`.) `MOUNTING PLATE` is `MOUNTING PL.SC64`; the `NAME` line
+inside still says `MOUNTING PLATE`. `tools/mkd64.py` and `src/files.c` apply the
+same rule, and the directory lists parts without the `.SC64`.
+
+## STL
+
+`file_stl` writes ASCII STL in millimetres. Each `EXTRUDE` is a `solid PART`
+and each `CUT` a `solid CUT` (the tool, not subtracted). A rectangle is a box;
+a circle is a 16-sided prism.
+
 ## Why text
 
 Because a 1541 is slow enough that the extra bytes don't show, and because

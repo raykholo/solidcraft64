@@ -8,3 +8,9 @@ repository or in its releases.
 
 SolidCraft 64 is a parody. It is not affiliated with, endorsed by, or a
 replacement for SolidCraft.
+
+samples/in/Mounting Plate.sc98 and samples/in/Filleted Plate.sc2 are copied from
+SolidCraft 2000's samples (github.com/raykholo/solidcraft2000, MIT License,
+Copyright (c) 2026 SolidCraft 2000 and SolidCraft 98 contributors), and are used
+only as inputs to tools/convert.py and its tests. tools/convert.py reads the
+SolidCraft 98 and 2000 file formats as that project's source documents them.
