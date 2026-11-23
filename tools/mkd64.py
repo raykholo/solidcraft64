@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """mkd64: build a 1541 disk image (.d64, 35 tracks, no error bytes) from files.
 
-    mkd64.py OUT.d64 SOLIDCRAFT.prg [PART.SC64 ...]
+    mkd64.py OUT.d64 SOLIDCRAFT.prg [NAME=OTHER.prg ...] [PART.SC64 ...]
 
-The first file goes on the disk as a PRG called SOLIDCRAFT. Every *.SC64 goes
-on as a SEQ, named as docs/FORMAT.md says (c64_name below). The disk is
+The first file goes on the disk as a PRG called SOLIDCRAFT (the boot loader).
+NAME=FILE.prg adds another PRG called NAME (SC64.BIN, the program it loads).
+Every *.SC64 goes on as a SEQ, named as docs/FORMAT.md says (c64_name below). The disk is
 called "SOLIDCRAFT 64", ID "SC".
 
 Plain Python, standard library only. The layout is the 1541's own, which is
@@ -180,6 +181,10 @@ def build_from_paths(prg, parts):
     """The Makefile's call: one program, then the parts."""
     files = [("SOLIDCRAFT", "PRG", open(prg, "rb").read())]
     for p in parts:
+        if "=" in p and not p.upper().endswith(EXT):
+            name, path = p.split("=", 1)
+            files.append((name.upper(), "PRG", open(path, "rb").read()))
+            continue
         if not p.upper().endswith(EXT):
             raise D64Error("%s is not a .SC64 file" % p)
         files.append((c64_name(p), "SEQ", open(p, "rb").read()))
@@ -227,7 +232,7 @@ def read_d64(img):
 
 def main(argv):
     if len(argv) < 3:
-        sys.exit("usage: mkd64.py OUT.d64 PROGRAM.prg [PART.SC64 ...]")
+        sys.exit("usage: mkd64.py OUT.d64 PROGRAM.prg [NAME=OTHER.prg ...] [PART.SC64 ...]")
     try:
         img = build_from_paths(argv[2], argv[3:])
     except D64Error as e:

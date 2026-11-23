@@ -7,7 +7,9 @@ part g_part;
 void model_new(void)
 {
     memset(&g_part, 0, sizeof g_part);
-    strcpy(g_part.name, "PART1");
+    /* "part1" in lower case: cc65 makes that $50 $41 $52 $54 $31, the
+     * upper case the disk and the part file use (see files.c). */
+    strcpy(g_part.name, "part1");
 }
 
 unsigned char model_add(const feature *f)

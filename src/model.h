@@ -46,7 +46,8 @@ void view_rotate(signed char dyaw, signed char dpitch);  /* in 1/64ths of a turn
 void view_text(unsigned char col, unsigned char row, const char *s); /* 8x8 text */
 void view_done(void);                         /* back to the text screen         */
 
-/* files.c (lane B). Return 0 on success, or a KERNAL/DOS error number. */
+/* files.c (lane B). Return 0 on success, or a KERNAL/DOS error number;
+ * file_dir returns how many names it found. */
 unsigned char file_save(const char *name);    /* "NAME.SC64" on drive 8          */
 unsigned char file_load(const char *name);
 unsigned char file_stl(const char *name);     /* ASCII STL, "NAME.STL"           */
