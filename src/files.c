@@ -160,7 +160,11 @@ unsigned char file_save(const char *name)
     /* The whole file is built in RAM first: see open_write(). */
     bp = buf;
     bstr("sc64 1\nname ");
-    for (i = 0; i < NAME_LEN && g_part.name[i]; ++i) bput(g_part.name[i]);
+    for (i = 0; i < NAME_LEN && g_part.name[i]; ++i) {
+        unsigned char c = g_part.name[i];
+        if (c >= 0xC1 && c <= 0xDA) c -= 0x80;      /* a shifted letter: write it as $41-$5A */
+        bput(c);
+    }
     bput('\n');
     for (i = 0; i < g_part.count; ++i) {
         f = &g_part.f[i];

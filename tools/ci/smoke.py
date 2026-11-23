@@ -49,18 +49,76 @@ def main():
         step("  ... loading", wait="LOADING", name="loading")
         step("  ... loaded", wait="READY.", below="LOADING", timeout=600, name="loaded")
         print("  loaded in %.0f s of warp" % (time.time() - t0))
-        step("RUN", keys="RUN\r")
-        time.sleep(3)
-        shot("running")
-        # Steps for the splash, the menus, the wireframe and the files are added
-        # as each lane lands: see the git log.
+        step("RUN: the boot loader asks about the cartridge", keys="RUN\r",
+             wait="FAST LOADER CARTRIDGE FITTED", name="cartridge")
+        step("N: the slow way, border flashing", keys="N", wait="SEARCHING FOR SC64.BIN")
+        time.sleep(1)
+        shot("stripes")
+        step("The splash", wait="LOADED IN", timeout=900, name="splash")
+        step("Any key: the main screen", keys=" ", wait="F1 FILE", name="main")
+
+        step("F3 Sketch > Rectangle, 80 x 50", keys="{F3}", wait="CIRCLE", name="sketch-menu")
+        step("  the dialog", keys="\r", wait="WIDTH", name="rect-dialog")
+        step("  typed", keys="0\r0\r80\r50\r", wait="1/16 FEATURES")
+        step("F3 Sketch > Circle, 20 across", keys="{F3}{DOWN}\r", wait="DIAMETER")
+        step("  typed", keys="40\r25\r20\r", wait="2/16 FEATURES")
+        step("F5 Features > Extrude the rectangle 6 mm", keys="{F5}\r", wait="SKETCH2")
+        step("  picked", keys="\r", wait="BASE Z")
+        step("  typed", keys="6\r0\r", wait="3/16 FEATURES")
+        step("F5 Features > Cut the circle, through", keys="{F5}{DOWN}\r", wait="SKETCH2")
+        step("  picked", keys="{DOWN}\r", wait="TOP Z")
+        step("  the defaults: 5 mm down from the top", keys="\r\r", wait="4/16 FEATURES", name="features")
+
+        print("F7 View > Wireframe")
+        m.type("{F7}\r")
+        time.sleep(4)
+        shot("wireframe")
+        for i in range(3):
+            m.type("{RIGHT}{RIGHT}{UP}")
+            time.sleep(4)
+            shot("turned-%d" % (i + 1))
+        step("RUN/STOP: back", keys="{STOP}", wait="F1 FILE")
+
+        step("F1 File > Save as PLATE", keys="{F1}{DOWN}{DOWN}\r", wait="SAVE AS")
+        step("  saved", keys="{DEL}{DEL}{DEL}{DEL}{DEL}PLATE\r", wait="SAVED.", timeout=600, name="saved")
+        step("F1 File > Export STL", keys="{F1}{DOWN}{DOWN}{DOWN}\r", wait="EXPORT STL AS")
+        step("  written", keys="\r", wait="STL WRITTEN.", timeout=900, name="stl")
+        step("F1 File > New", keys="{F1}\r", wait="0/16 FEATURES")
+        step("F1 File > Open: the disk's parts", keys="{F1}{DOWN}\r", wait="MOUNTING PL", timeout=600,
+             name="open")
+        step("  the Mounting Plate, from SolidCraft 98", keys="{DOWN}{DOWN}\r", wait="LOADED.", timeout=600, name="opened")
+        print("F7 View > Wireframe")
+        m.type("{F7}\r")
+        time.sleep(6)
+        shot("mounting-plate")
+        step("RUN/STOP: back", keys="{STOP}", wait="F1 FILE")
     finally:
         m.quit()
         try:
             vice.wait(timeout=30)
         except subprocess.TimeoutExpired:
             vice.kill()
+    check_disk(d64)
     print("smoke test passed")
+
+
+def check_disk(d64):
+    """What the C64 wrote, read back on this side."""
+    sys.path.insert(0, os.path.join(HERE, ".."))
+    import mkd64
+    _, files = mkd64.read_d64(open(d64, "rb").read())
+    got = {name: data for name, _, data in files}
+    want = (b"SC64 1\rNAME PLATE\rRECT 0 0 800 500\rCIRCLE 400 250 200\r"
+            b"EXTRUDE 0 60 0\rCUT 1 50 60\rEND\r")
+    part = got.get("PLATE.SC64")
+    if part != want:
+        sys.exit("PLATE.SC64 on the disk is %r, not %r" % (part, want))
+    print("PLATE.SC64 on the disk: as typed")
+    stl = got.get("PLATE.STL", b"")
+    facets = stl.count(b"facet normal")
+    if not stl.startswith(b"solid ") or not stl.rstrip().endswith(b"endsolid cut") or facets < 12:
+        sys.exit("PLATE.STL on the disk isn't an STL (%d bytes, %d facets)" % (len(stl), facets))
+    print("PLATE.STL on the disk: %d bytes, %d facets" % (len(stl), facets))
 
 
 if __name__ == "__main__":

@@ -65,6 +65,70 @@ colour matrix is a rounding error you only have to fill once.
 
 Other angles: [2](docs/screenshots/wire-2.png), [3](docs/screenshots/wire-3.png).
 
+## Loading
+
+```
+LOAD"SOLIDCRAFT",8,1
+RUN
+```
+
+![LOAD"SOLIDCRAFT",8,1](docs/screenshots/ui-1-load.png)
+
+`SOLIDCRAFT` is a 664-byte boot loader. It asks whether a fast loader
+cartridge is fitted, then reads `SC64.BIN` from the disk through the KERNAL,
+one byte at a time, changing the border colour with every byte. That is the
+stripes.
+
+![The boot loader](docs/screenshots/ui-2-prompt.png)
+
+It loads at the speed of a real 1541. In VICE with true drive emulation (not
+warp), the 13.8 KB program takes **29 seconds**, and the splash screen tells
+you how long yours took. Nothing in the loader goes faster than the drive.
+
+![Loading, with the border stripes](docs/screenshots/ui-3-loader.png)
+
+**The fast loader cartridge.** Answer Y and the loader introduces a ZAPLOAD 64
+cartridge, from Bytewise Ltd, which does not exist. It then loads exactly as
+slowly as before and prints `SPEEDUP: 1.00X (SEE MANUAL)`. We did not write a
+fast loader. A real one has to upload its own code into the 1541, and the joke
+is better when the cartridge is honest about it.
+
+## Using it
+
+![The splash screen](docs/screenshots/ui-4-splash.png)
+
+The keys are on the menu bar. F1 FILE, F3 SKETCH, F5 FEATURES, F7 VIEW. Cursor
+left and right move between menus, cursor up and down choose, RETURN selects,
+RUN/STOP backs out.
+
+| Menu | |
+|---|---|
+| F1 FILE | NEW, OPEN, SAVE, EXPORT STL, QUIT |
+| F3 SKETCH | RECTANGLE, CIRCLE |
+| F5 FEATURES | EXTRUDE, CUT, DELETE (the highlighted feature) |
+| F7 VIEW | WIREFRAME, TURBO, ABOUT |
+
+![A menu](docs/screenshots/ui-5-menu.png)
+
+Dimensions are typed in millimetres with one decimal place (`80`, `12.5`,
+`-3.0`), and stored in tenths. RETURN or the cursor keys move between fields;
+RUN/STOP cancels.
+
+![A dimension dialog](docs/screenshots/ui-6-dialog.png)
+
+The feature list holds 16 features. Pick one with cursor up and down. An
+asterisk after the part's name means it has changed since it was saved, and
+NEW, OPEN and QUIT ask `ARE YOU SURE? (Y/N)` before losing it.
+
+![The feature list](docs/screenshots/ui-7-list.png)
+
+WIREFRAME switches to the 320 x 200 view. The cursor keys, or a joystick in
+port 2, turn the part. RUN/STOP comes back.
+
+The clock at the bottom right is `TI$`, and counts from power on. TURBO is in
+the VIEW menu. It switches on, says so, and changes nothing. Fill the feature
+list and the screen says `?OUT OF MEMORY  ERROR`. It isn't one.
+
 ## Building
 
 You need [cc65](https://cc65.github.io). Then:
