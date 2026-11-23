@@ -1,0 +1,10 @@
+SolidCraft 64
+Copyright (c) 2026 SolidCraft 64 contributors. MIT License (see LICENSE).
+
+SolidCraft 64 is compiled with cc65 (https://cc65.github.io) and tested in
+VICE (https://vice-emu.sourceforge.io). Both are tools only: neither is part
+of this project, and no cc65, VICE or Commodore ROM code is in this
+repository or in its releases.
+
+SolidCraft 64 is a parody. It is not affiliated with, endorsed by, or a
+replacement for SolidCraft.

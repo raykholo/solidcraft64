@@ -1,0 +1,11 @@
+# Local test image: cc65, VICE (x64sc, c1541, petcat) under Xvfb, and the ROMs.
+#   podman build -t sc64-vice -f tools/ci/Containerfile --build-context vice=$HOME/builds/sc64 tools/ci
+FROM docker.io/library/ubuntu:24.04
+RUN sed -i 's/^Components: main restricted$/Components: main restricted universe multiverse/' /etc/apt/sources.list.d/ubuntu.sources \
+ && apt-get update -qq \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+      cc65 vice xvfb xauth make python3 python3-pil curl ca-certificates imagemagick \
+ && rm -rf /var/lib/apt/lists/*
+COPY fetch-roms.sh /usr/local/bin/fetch-roms.sh
+COPY --from=vice vice-3.7.1.tar.gz /tmp/vice.tgz
+RUN VICE_TGZ=/tmp/vice.tgz fetch-roms.sh /usr/share/vice && rm /tmp/vice.tgz
